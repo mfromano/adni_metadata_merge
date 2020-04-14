@@ -29,6 +29,8 @@ class ParticipantCollection:
         self.NEUROBAT = data_from_user(user_id, NEUROBAT_LOC,'neurobat',nb_fields)
         self.MOCA = data_from_user(user_id, MOCA_LOC,'moca',moca_fields)
         self.CDR = data_from_user(user_id, CDR_LOC,'cdr',cdf_fields)
+        self.ARM = data_from_user(user_id, ARM_LOC,'arm',arm_fields)
+        self.dxsum = data_from_user(user_id,DX_SUM_LOC,'dxsum',dxsum_fields)
         # self.merge_data()
         
     def merge_data(self):

@@ -52,5 +52,20 @@ reg_fields = ['Phase', 'RID', 'VISCODE', 'VISCODE2', 'EXAMDATE']
 ADNI_MERGE_LOC = BASE_DIR + 'ADNIMERGE.csv'
 merge_fields = ['Phase','RID','PTID','VISCODE','COLPROT','ORIGPROT','EXAMDATE','DX_bl','AGE','APOE4']
 
+#coding for "DIAGNOSIS" (ADNI3)
+#1=CN	2=MCI	3=Dementia
+#coding for DXCURREN (ADNI1)
+#1=NL	2=MCI	3=AD
+#coding for dxchange (ADNI2/GO):
+#1=Stable: NL to NL	 2=Stable: MCI to MCI	 3=Stable: Dementia to Dementia
+# 4=Conversion: NL to MCI	 5=Conversion: MCI to Dementia	 
+#6=Conversion: NL to Dementia	 7=Reversion: MCI to NL	 8=Reversion: Dementia to MCI
+#9=Reversion: Dementia to NL
+
 DX_SUM_LOC = BASE_DIR + 'DX_SUM_ALL.csv'
-merge_fields = ['Phase','RID','VISCODE','VISCODE2','EXAMDATE','DXCURREN'] # finish this
+dxsum_fields = ['Phase','RID','VISCODE','VISCODE2','EXAMDATE','DXCHANGE','DXCURREN','DIAGNOSIS'] # finish this
+
+#coding for "ARM"
+#1=NL - 1.5T only	2=MCI - 1.5T only	3=AD - 1.5T only	4=NL - PET+1.5T	5=MCI - PET+1.5T	6=AD - PET+1.5T	7=NL - 3T+1.5T	8=MCI - 3T+1.5T	9=AD - 3T+1.5T
+ARM_LOC = BASE_DIR + 'ARM.csv'
+arm_fields = ['Phase','RID','ARM']
