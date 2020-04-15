@@ -64,8 +64,18 @@ merge_fields = ['Phase','RID','PTID','VISCODE','COLPROT','ORIGPROT','EXAMDATE','
 
 DX_SUM_LOC = BASE_DIR + 'DX_SUM_ALL.csv'
 dxsum_fields = ['Phase','RID','VISCODE','VISCODE2','EXAMDATE','DXCHANGE','DXCURREN','DIAGNOSIS'] # finish this
+ADNI3_TRANS = {1: 'CN',2: 'MCI', 3: 'AD'}
+ADNI1_TRANS = {1: 'NL',2: 'MCI', 3: 'AD'}
+ADNI2GO_TRANS = {1: 'NL',2: 'MCI', 3: 'AD', 4: 'MCI', 5: 'AD', 6: 'AD', 7: 'NL', 8: 'MCI', 9: 'NL'}
 
 #coding for "ARM"
 #1=NL - 1.5T only	2=MCI - 1.5T only	3=AD - 1.5T only	4=NL - PET+1.5T	5=MCI - PET+1.5T	6=AD - PET+1.5T	7=NL - 3T+1.5T	8=MCI - 3T+1.5T	9=AD - 3T+1.5T
 ARM_LOC = BASE_DIR + 'ARM.csv'
 arm_fields = ['Phase','RID','ARM']
+ARM_ADNI2_TRANS = {1: 'NL',2: 'MCI', 3: 'AD', 4: 'NL', 5: 'MCI', 6: 'AD', 7: 'NL', 8: 'LMCI', 9: 'AD', 10:'EMCI',11:'SMC'}
+ARM_ADNIGO_TRANS = {1: 'NL',2: 'MCI', 3: 'AD', 4: 'NL', 5: 'MCI', 6: 'AD', 7: 'NL', 8: 'MCI', 9: 'AD', 10: 'EMCI'}
+ARM_ADNI1_TRANS = {1: 'NL',2: 'MCI', 3: 'AD', 4: 'NL', 5: 'MCI', 6: 'AD', 7: 'NL', 8: 'MCI', 9: 'AD'}
+
+DX_TRANS = {'ADNI1': ADNI1_TRANS, 'ADNI2': ADNI2GO_TRANS,\
+            'ADNIGO': ADNI2GO_TRANS, 'ADNI3': ADNI3_TRANS,\
+            'ARM': {'ADNI1': ARM_ADNI1_TRANS, 'ADNI2': ARM_ADNI2_TRANS, 'ADNIGO': ARM_ADNIGO_TRANS}}
