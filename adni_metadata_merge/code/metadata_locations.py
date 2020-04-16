@@ -20,8 +20,8 @@ tau3_fields = ['Phase','RID','VISCODE','VISCODE2', 'DONE', 'SCANDATE']
 tau3 = {'loc': TAUMETA3_LOC, 'fields': tau3_fields, 'isexam':1, 'isimage': 1, 'DONECOL': 'DONE'}
 
 PIBMETA_LOC = BASE_DIR + 'PIBMETA.csv'
-pib_fields = ['RID', 'VISCODE', 'EXAMDATE', 'PBCONDCT'] #PBCONDCT = 0 = no scan conducted
-pib = {'loc': PIBMETA_LOC, 'fields': pib_fields, 'isexam':1,'isimage': 1, 'DONECOL': 'PBCONDCT'}
+pib_fields = ['RID', 'VISCODE', 'EXAMDATE', 'PBCONDCT']  # PBCONDCT = 0 = no scan conducted
+pib = {'loc': PIBMETA_LOC, 'fields': pib_fields, 'isexam': 1,'isimage': 1, 'DONECOL': 'PBCONDCT'}
 
 # MRI
 MRI1META_LOC = BASE_DIR + 'MRI1pt5META.csv'
@@ -47,7 +47,7 @@ npi = {'loc': NPI_LOC, 'fields': npi_fields, 'isexam':1,'isimage': 0}
 
 NEUROBAT_LOC = BASE_DIR + 'NEUROBAT.csv'
 nb_fields = ['Phase', 'RID', 'VISCODE', 'VISCODE2', 'EXAMDATE'] #Note: missing data in clockcirc, clocksym, etc. for many of these
-nb = {'loc': NEUROBAT_LOC, 'fields': nb_fields, 'isexam':1,'isimage': 0}
+nb = {'loc': NEUROBAT_LOC, 'fields': nb_fields, 'isexam': 1,'isimage': 0}
 
 MOCA_LOC = BASE_DIR + 'MOCA.csv' # note: there is no "examdate" or equivalent here. Have to use surrogate
 moca_fields = ['Phase','RID','VISCODE', 'VISCODE2']
