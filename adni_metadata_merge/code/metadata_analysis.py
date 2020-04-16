@@ -13,72 +13,105 @@ import os
 os.chdir('/home/mfromano/Research/alzheimers/adni_metadata_merge/code/')
 from metadata_locations import *
 
+# FILE_LIST = {'tau2': tau2, 'tau3': tau3, 'mri1': mri1, 'mri3': mri3, 'pib': pib,\
+#              'mmse': mmse, 'npiq': npiq, 'npi':npi,'nb':nb, 'moca':moca, 'cdf': cdf,\
+#                  'reg': reg, 'dxsum': dxsum, 'arm': arm}
+
+'''
+    This class takes as input a unique user identifier and generates attributes
+    consisting of dataframes for each csv in file_list
+'''
 # class with info for each participant
 class ParticipantCollection:
     def __init__(self,user_id):
         self.user_id = user_id
-        self.registry = data_from_user(user_id, REGISTRY_LOC, 'reg',reg_fields)
-        self.tau = pd.concat([data_from_user(user_id,TAUMETA2_LOC,'tau',tau2_fields), \
-                                     data_from_user(user_id, TAUMETA3_LOC,'tau',tau2_fields)])
-        self.pib = data_from_user(user_id,PIBMETA_LOC,'pib',pib_fields)
-        self.mri1 = data_from_user(user_id,MRI1META_LOC,'mri',mri1_fields)
-        self.mri3 = data_from_user(user_id,MRI3META_LOC,'mri',mri3_fields)
-        self.MMSE = data_from_user(user_id,MMSE_LOC,'mmse',mmse_fields)
-        self.NPIQ = data_from_user(user_id,NPIQ_LOC,'npiq',npiq_fields)
-        self.NPI = data_from_user(user_id, NPI_LOC,'npi',npi_fields)
-        self.NEUROBAT = data_from_user(user_id, NEUROBAT_LOC,'neurobat',nb_fields)
-        self.MOCA = data_from_user(user_id, MOCA_LOC,'moca',moca_fields)
-        self.CDR = data_from_user(user_id, CDR_LOC,'cdr',cdf_fields)
-        self.ARM = data_from_user(user_id, ARM_LOC,'arm',arm_fields)
-        self.dxsum = data_from_user(user_id,DX_SUM_LOC,'dxsum',dxsum_fields)
-        # self.merge_data()
-        
+        for key in FILE_LIST.keys():
+            setattr(self,key,data_from_user(user_id, FILE_LIST[key]['loc'], FILE_LIST[key]['fields']))
+
+
+'''
+    This function takes a dataframe and specified columns. returns a dataframe
+    consisting of the data contained within those columns
+'''
+def parse_field(df, columns):
+    parsed_table = pd.DataFrame(data = [df[col] for col in columns]).T
+    return parsed_table
+
+'''
+     This function takes a user ID, a file location, and the fields to look for
+     in the CSV file. It returns a dataframe consisting of only those columns.
+     It also renames 
+'''
+def data_from_user(user_id,fi,fields):
+    data_fi = pd.read_csv(fi)
+    locs = data_fi.RID.loc[data_fi.RID == user_id] # find entries that match RID
+    table_entries = data_fi.loc[locs.index] #get the entire rows
+    fields = parse_field(table_entries,fields) #get the values for all of the desired fields
+    if 'PHASE' in fields.columns: #homogenize the 'Phase' column
+        fields = fields.rename(columns={'PHASE': 'Phase'})
+    return fields
+
+'''
+    This function takes as input a ParticipantCollection object and asks whether
+    or not, for each unique visit, there exists a datapoint for each of the csv
+    files.
+    
+    Unique identifiers for each visit REQUIRE an identical match between:
+        Phase, VISCODE, and VISCODE2
+'''
 def merge_data(pc):
-    #identify unique visits and dates for patients
-    phase = pc.registry.Phase.to_numpy()
-    visits2 = pc.registry.VISCODE2.to_numpy()
-    visits1 = pc.registry.VISCODE.to_numpy()
-    assert(len(visits1) == len(visits2))
-    examdates = pc.registry.EXAMDATE.to_numpy()
+    
+    # convert these to numpy arrays
+    unique_ids = pc.reg[['Phase', 'RID', 'VISCODE', 'VISCODE2', 'EXAMDATE']]
+
     #for each unique visit, query: MRI weight? Tau? Pib? MMSE? NPIQ? NPI? NeuroBat? MOCA? CDR? 
-    column_headers = ['Phase','RID','VISCODE1','VISCODE2',\
-        'DATE','DX','MRI1','MRI3',\
-         'Tau','PIB','MMSE',\
-         'NPIQ','NPI',\
-          'NeuroBat','MOCA','CDR']
+    column_headers = ['Phase','RID','VISCODE1','VISCODE2','DATE','DX']
+    
+    #add as column headers all of the csv sheets that are assessments
+    exam_headers = []
+    for key in FILE_LIST.keys():
+        if FILE_LIST[key]['isexam'] == 1:
+            exam_headers.append(key)
+            column_headers.append(key)
+    #initialize output table
     output_table = pd.DataFrame(data=None,\
         columns=column_headers)
-    for i in range(len(visits1)):
-        visit_data = data_from_visitid(pc, phase[i], visits1[i], visits2[i], examdates[i])
+    
+    for index, unique_id in unique_ids.iterrows():
+        visit_data = data_from_visitid(pc, unique_id)
         output_table = output_table.append(pd.DataFrame(data = [visit_data], columns = column_headers), ignore_index=True)
+        
     return output_table
 
-def data_from_visitid(pc, phase, visit1, visit2,examdate):
+
+'''
+    Given a ParticipantCollection, identifiers for a particular visit,and csv keys
+    return a summary row with information from each of the CSVs included in
+'''
+def data_from_visitid(pc, unique_id):
+    all_data = unique_id.values.tolist()
+    visit1 = unique_id.VISCODE
+    visit2 = unique_id.VISCODE2
+    phase = unique_id.Phase
     
-    all_data = [phase, pc.user_id, visit1, visit2, examdate]
-    
-    def add_columns(field, all_data, hasfield_val = None):
-        if len(field) == 0:
-            all_data = all_data + [0]
-            return all_data
-        
-        if 'VISCODE2' in field.columns and not pd.isnull(visit2):
-            field_entries = field.loc[(field.VISCODE2.eq(visit2)) & \
-                (field.Phase.eq(phase))]
-        else:
-            field_entries = field.loc[field.VISCODE.eq(visit1)]
-        
+    def add_columns(exam_csv, all_data, hasfield_val = None):
+
+        # get entry from csv corresponding to the unique identifier
+        exam_entry = get_exam_entry(exam_csv)
+
         # if the given assessment can't be located for a field, set it as 0
-        if len(field_entries) == 0:
+        if len(exam_entry) == 0:
             all_data = all_data + [0]
+        
         # otherwise, if there is an entry for the field but no 
         #indicator as to whether or not it was performed, set it as a 1
-        elif hasfield_val is None:
+        elif (len(exam_entry) > 0) and (hasfield_val is None):
             all_data = all_data + [1]
+            
         # otherwise, if there is an entry for the field and an indicator
         # get the value of the indicator
         elif hasfield_val is not None:
-            value_to_add = pd.to_numeric(getattr(field_entries, hasfield_val)).values
+            value_to_add = pd.to_numeric(getattr(exam_entry, hasfield_val)).values
             # if any of the values are equal to 1, set to 1
             if any(value_to_add == 1):
                 all_data = all_data + [1]
@@ -88,68 +121,86 @@ def data_from_visitid(pc, phase, visit1, visit2,examdate):
             else:
                 all_data = all_data + [-4]
         else:
-            error('undefined condition')
+            raise TypeError('undefined condition')
         return all_data
 
-    def add_dx_columns(arm, dxsum, all_data):
-        if (phase != 'ADNI3') and ((pd.isnull(visit2) and visit1 == 'sc') or (visit2 == 'sc')):
-            cur_arm = arm.loc[arm.Phase == phase]
-            if len(cur_arm) is not 1:
-                error('More than 1 arm value')
-            cur_arm = cur_arm.ARM
-            converted_value = DX_TRANS['ARM'][phase][int(cur_arm)]
+    '''
+        Given an exam csv for a particular patient, identify the data for
+        the given exam
+    '''
+    def get_exam_entry(exam_csv):
+        if 'VISCODE2' in exam_csv.columns and not pd.isnull(visit2):
+            exam_entry = exam_csv.loc[(exam_csv.VISCODE2.eq(visit2)) & \
+                (exam_csv.Phase.eq(phase)) & exam_csv.VISCODE.eq(visit1)]
+        elif 'Phase' in exam_csv.columns:
+            exam_entry = exam_csv.loc[(exam_csv.VISCODE.eq(visit1)) &\
+                                      (exam_csv.Phase.eq(phase))]
         else:
-            if 'VISCODE2' in dxsum.columns and not pd.isnull(visit2):
-                entry_row = dxsum.loc[(dxsum.VISCODE2.eq(visit2)) & \
-                        (dxsum.Phase.eq(phase)) & \
-                            dxsum.VISCODE.eq(visit1)]
-            else:
-                entry_row = dxsum.loc[dxsum.VISCODE.eq(visit1)]
+            exam_entry = exam_csv.loc[(exam_csv.VISCODE.eq(visit1))] 
+        return exam_entry
+
+        
+    '''    
+        Given a subject's arm and dxsum csv's, add value that corresponds to
+        the patient's diagnosis
+    '''
+    def add_dx_columns(arm, dxsum, all_data):
+        
+        # if the phase is ADNI1, 2, or GO, and this is a screening exam, 
+        # find the screening diagnosis in the arm csv
+        if (phase != 'ADNI3') and ((pd.isnull(visit2) and visit1 == 'sc') or (visit2 == 'sc')):
+            
+            # get the dx code 
+            cur_arm = arm.loc[arm.Phase == phase]
+            if len(cur_arm) != 1:
+                print('More than 1 arm value')
+                raise
+            dx_code = cur_arm.ARM
+            
+            #convert dx code into a diagnosis
+            converted_value = DX_TRANS['ARM'][phase][int(dx_code)]
+            
+        #if the phase ADNI3, or this is not an 'sc' visit
+        else:
+            # get entry in dxsum
+            entry_row = get_exam_entry(dxsum)
+            
+            # find the field corresponding to the phase of the trial
             if phase == 'ADNI1':
                 entry_value = entry_row.DXCURREN
             elif (phase == 'ADNI2') or (phase == 'ADNIGO'):
                 entry_value = entry_row.DXCHANGE
-            else:
+            elif phase == 'ADNI3':
                 entry_value = entry_row.DIAGNOSIS
+            else:
+                print('Invalid phase entered!')
+                raise
+            
+            # determine the converted value
             if len(entry_value) == 1:
                 if entry_value.isnull().bool():
                     converted_value = -4
                 else:
                     converted_value = DX_TRANS[str(phase)][int(entry_value)]
-            else:
-                if len(entry_value) > 1:
-                    raise
+            elif len(entry_value) == 0:
                 converted_value = -4
+            else:
+                raise TypeError('more than 1 diagnosis code for this visit')
+                
+        
         all_data = all_data + [converted_value]
         return all_data
     
-    all_data = add_dx_columns(pc.ARM, pc.dxsum, all_data)
-    all_data = add_columns(pc.mri1, all_data, 'MMCONDCT')
-    all_data = add_columns(pc.mri3, all_data, 'MMCONDCT')
-    all_data = add_columns(pc.tau, all_data, 'DONE')
-    all_data = add_columns(pc.pib, all_data, 'PBCONDCT')
-    all_data = add_columns(pc.MMSE, all_data)
-    all_data = add_columns(pc.NPIQ, all_data)
-    all_data = add_columns(pc.NPI, all_data)
-    all_data = add_columns(pc.NEUROBAT, all_data)
-    all_data = add_columns(pc.MOCA, all_data)
-    all_data = add_columns(pc.CDR, all_data)
+    all_data = add_dx_columns(pc.arm, pc.dxsum, all_data)
+    
+    for key in FILE_LIST.keys():
+        if FILE_LIST[key]['isexam'] == 1:
+            if FILE_LIST[key]['isimage'] == 1:
+                all_data = add_columns(getattr(pc,key), all_data, FILE_LIST[key]['DONECOL'])
+            else:
+                all_data = add_columns(getattr(pc,key), all_data)
     
     return all_data
-            
-def parse_field(df, columns):
-    parsed_table = pd.DataFrame(data = [df[col] for col in columns]).T
-    return parsed_table
-    
-def data_from_user(user_id,fi,label,fields):
-    data_fi = pd.read_csv(fi)
-    locs = data_fi.RID.loc[data_fi.RID == user_id]
-    table_entries = data_fi.loc[locs.index]
-    fields = parse_field(table_entries,fields)
-    fields['Exam'] = pd.Series(np.repeat(label,len(fields)),index = fields.index)
-    if 'PHASE' in fields.columns:
-        fields = fields.rename(columns={'PHASE': 'Phase'})
-    return fields
 
 tau_sheet = pd.read_csv(TAUMETA2_LOC)
 tau_sheet3 = pd.read_csv(TAUMETA3_LOC)
@@ -158,7 +209,7 @@ tau_subjects = np.union1d(pd.unique(tau_sheet.RID),pd.unique(tau_sheet3.RID))
 
 # get info across all 5 documents for all subjects
 participants_tau = [ParticipantCollection(x) for x in tau_subjects]
-# print('finished generating participants')
+print('finished generating participants')
 output_collection = []
 for x in participants_tau:
     output_collection.append(merge_data(x))
