@@ -60,7 +60,7 @@ def has_imaging(output_spreadsheet):
         has_tau2 = any(subject_csv.tau2.eq(1))
         has_tau3 = any(subject_csv.tau3.eq(1))
         has_amyloid = any(subject_csv.amyloid.eq(1))
-        has_amyloid2 = any(subject_csv.amyloid2.eq(1))
+        has_amyloid2 = any(subject_csv.amyloid2.eq(1)) or any(subject_csv.amyloid2.eq(2))
         
         has_any_amyloid = (has_amyloid or has_amyloid2 or has_pib)
         has_any_tau = (has_tau2 or has_tau3)
@@ -68,7 +68,5 @@ def has_imaging(output_spreadsheet):
             rid_with_all_imaging.append(rid)
     return rid_with_all_imaging
 
-def has_longitudinal(output_spreadsheet):
-    
 # if __name__ == '__main__':
 #     generate_mri_subjects()
