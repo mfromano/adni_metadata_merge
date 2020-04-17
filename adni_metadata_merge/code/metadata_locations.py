@@ -13,33 +13,49 @@ BASE_DIR = '/home/mfromano/Research/alzheimers/data/'
 # PET scans
 TAUMETA2_LOC = BASE_DIR + 'TAUMETA.csv'
 tau2_fields = ['Phase','RID','VISCODE','VISCODE2', 'DONE', 'SCANDATE']
-tau2 = {'loc': TAUMETA2_LOC, 'fields': tau2_fields, 'isexam':1, 'isimage': 1, 'DONECOL': 'DONE'}
+tau2 = {'loc': TAUMETA2_LOC, 'fields': tau2_fields, 'isexam': 1,\
+        'isimage': 1, 'DONECOL': 'DONE'}
 
 TAUMETA3_LOC = BASE_DIR + 'TAUMETA3.csv'
-tau3_fields = ['Phase','RID','VISCODE','VISCODE2', 'DONE', 'SCANDATE']
-tau3 = {'loc': TAUMETA3_LOC, 'fields': tau3_fields, 'isexam':1, 'isimage': 1, 'DONECOL': 'DONE'}
+tau3_fields = ['Phase', 'RID', 'VISCODE','VISCODE2', 'DONE', 'SCANDATE']
+tau3 = {'loc': TAUMETA3_LOC, 'fields': tau3_fields, 'isexam':1,\
+        'isimage': 1, 'DONECOL': 'DONE'}
 
 PIBMETA_LOC = BASE_DIR + 'PIBMETA.csv'
 pib_fields = ['RID', 'VISCODE', 'EXAMDATE', 'PBCONDCT']  # PBCONDCT = 0 = no scan conducted
-pib = {'loc': PIBMETA_LOC, 'fields': pib_fields, 'isexam': 1,'isimage': 1, 'DONECOL': 'PBCONDCT'}
+pib = {'loc': PIBMETA_LOC, 'fields': pib_fields, 'isexam': 1,\
+       'isimage': 1, 'DONECOL': 'PBCONDCT'}
 
 # MRI
 MRI1META_LOC = BASE_DIR + 'MRI1pt5META.csv'
 mri1_fields = ['PHASE', 'FIELD_STRENGTH', 'RID', 'VISCODE','VISCODE2', 'MMCONDCT', 'MMREASON','EXAMDATE']
-mri1 = {'loc': MRI1META_LOC, 'fields': mri1_fields, 'isexam':1,'isimage': 1, 'DONECOL': 'MMCONDCT'}
+mri1 = {'loc': MRI1META_LOC, 'fields': mri1_fields, 'isexam': 1,\
+        'isimage': 1, 'DONECOL': 'MMCONDCT'}
 
 MRI3META_LOC = BASE_DIR + 'MRI3META.csv'
 mri3_fields = ['PHASE', 'FIELD_STRENGTH', 'RID', 'VISCODE', 'VISCODE2', 'MMCONDCT', 'MMREASON','EXAMDATE']
-mri3 = {'loc': MRI3META_LOC, 'fields': mri3_fields,'isexam':1, 'isimage': 1, 'DONECOL': 'MMCONDCT'}
+mri3 = {'loc': MRI3META_LOC, 'fields': mri3_fields,'isexam': 1,\
+        'isimage': 1, 'DONECOL': 'MMCONDCT'}
 
+AV45META_LOC = BASE_DIR + 'AV45META.csv'  # these are all florbetapir
+av45_fields = ['Phase', 'RID', 'VISCODE','VISCODE2', 'PMCONDCT','PMREASON','EXAMDATE']
+amyloid = {'loc': AV45META_LOC, 'fields': av45_fields, 'isexam': 1, \
+        'isimage': 1, 'DONECOL': 'PMCONDCT'}
+
+AMYMETA_LOC =  BASE_DIR + 'AMYMETA.csv'
+amy_fields = ['Phase', 'RID', 'VISCODE', 'VISCODE2', 'DONE','NDREASON','TRACERTYPE',\
+              'SCANDATE']  # 1 = florbetaben and 2=florbetapir
+amyloid2 = {'loc': AMYMETA_LOC, 'fields': amy_fields, 'isexam': 1,\
+       'isimage': 1, 'DONECOL': 'DONE'}
+    
 #Psych test logs
 MMSE_LOC = BASE_DIR + 'MMSE.csv'
 mmse_fields = ['Phase', 'RID', 'VISCODE', 'VISCODE2', 'EXAMDATE']
-mmse = {'loc': MMSE_LOC, 'fields': mmse_fields, 'isexam':1,'isimage': 0}
+mmse = {'loc': MMSE_LOC, 'fields': mmse_fields, 'isexam': 1,'isimage': 0}
 
 NPIQ_LOC = BASE_DIR + 'NPIQ.csv'
 npiq_fields = ['Phase', 'RID', 'VISCODE', 'VISCODE2', 'EXAMDATE']
-npiq = {'loc': NPIQ_LOC, 'fields': npiq_fields, 'isexam':1,'isimage': 0}
+npiq = {'loc': NPIQ_LOC, 'fields': npiq_fields, 'isexam': 1,'isimage': 0}
 
 NPI_LOC = BASE_DIR + 'NPI.csv'
 npi_fields = ['Phase', 'RID', 'VISCODE', 'VISCODE2', 'EXAMDATE']
@@ -88,8 +104,8 @@ arm = {'loc': ARM_LOC, 'fields': arm_fields, 'isexam':0 , 'isimage':0}
 
 FILE_LIST = {'tau2': tau2, 'tau3': tau3, 'mri1': mri1, 'mri3': mri3, 'pib': pib,\
              'mmse': mmse, 'npiq': npiq, 'npi':npi,'nb':nb, 'moca':moca, 'cdr': cdr,\
-                 'reg': reg, 'dxsum': dxsum, 'arm': arm}
-    
+                 'reg': reg, 'dxsum': dxsum, 'arm': arm, 'amyloid': amyloid,
+                 'amyloid2': amyloid2}
 
 # Now define the mappings from number to cognitive deficit
 ADNI3_TRANS = {1: 'CN',2: 'MCI', 3: 'AD'}
