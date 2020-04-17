@@ -67,6 +67,9 @@ def merge_data(pc):
     """
     # convert these to numpy arrays
     unique_ids = pc.reg[['Phase', 'RID', 'VISCODE', 'VISCODE2', 'EXAMDATE']]
+    # convert dates to exam dates
+    # TODO: DATE VALIDATION!!!!!
+    unique_ids.EXAMDATE = pd.to_datetime(unique_ids.EXAMDATE)
     #for each unique visit, query: MRI weight? Tau? Pib? MMSE? NPIQ? NPI? NeuroBat? MOCA? CDR? 
     column_headers = ['Phase','RID','VISCODE1','VISCODE2','DATE','DX']
     #add as column headers all of the csv sheets that are assessments
@@ -75,6 +78,10 @@ def merge_data(pc):
         if FILE_LIST[key]['isexam'] == 1:
             exam_headers.append(key)
             column_headers.append(key)
+            if FILE_LIST[key]['isimage']:
+                exam_headers.append(key + '_date')
+                column_headers.append(key + '_date')
+            
     #initialize output table
     output_table = pd.DataFrame(data=None,\
         columns=column_headers)
@@ -89,12 +96,12 @@ def data_from_visitid(pc, unique_id):
     Given a ParticipantCollection and identifiers for a particular visit,
     return a summary row with boolean from each of the CSVs included in
     """
-    summ_data = unique_id.values.tolist() 
+    summ_data = unique_id.values.tolist()
     summ_data = add_dx_columns(pc.arm, pc.dxsum, unique_id, summ_data)
     for key in FILE_LIST.keys():
         if FILE_LIST[key]['isexam'] == 1:
             if FILE_LIST[key]['isimage'] == 1:
-                summ_data = add_columns(getattr(pc,key), summ_data, unique_id, FILE_LIST[key]['DONECOL'])
+                summ_data = add_columns(getattr(pc,key), summ_data, unique_id, FILE_LIST[key]['DONECOL'], FILE_LIST[key]['DATE'])
             else:
                 summ_data = add_columns(getattr(pc,key), summ_data, unique_id)
     return summ_data
@@ -158,21 +165,22 @@ def get_arm_dx(arm_by_rid, phase):
     return converted_value
 
 
-def add_columns(exam_csv, summ_data, unique_id, done_column = None):
+def add_columns(exam_csv, summ_data, unique_id, done_column = None, date_column = None):
     """
     Given an exam csv for a particular exam, budding row of data, a unique
     event identifier unique_id, and the title of a column (if present) that
-    confirms whether or not a study was performed, add the relevant entry for
-    the study
+    confirms whether or not a study was performed, and the title of a column
+    (if present) that provides the date for imaging studies
     """
     # get entry from csv corresponding to the unique identifier
     exam_entry = get_exam_entry(exam_csv, unique_id)
     # if the given assessment can't be located for a field, set it as 0
     if len(exam_entry) == 0:
         summ_data = summ_data + [0]
+        return summ_data
     # otherwise, if there is an entry for the field but no
     # indicator as to whether or not it was performed, set it as a 1
-    elif (len(exam_entry) > 0) and (done_column is None):
+    if done_column is None:
         summ_data = summ_data + [1]
     # otherwise, if there is an entry for the field and an indicator
     # get the value of the indicator
@@ -180,6 +188,8 @@ def add_columns(exam_csv, summ_data, unique_id, done_column = None):
         summ_data = add_image_bool(exam_entry, done_column, summ_data)
     else:
         raise TypeError('undefined condition')
+    if date_column is not None:
+        summ_data = add_image_date(exam_entry, date_column, summ_data)
     return summ_data
 
 
@@ -206,6 +216,17 @@ def get_exam_entry(exam_csv_by_rid, unique_id):
         exam_entry = exam_csv_by_rid.loc[(exam_csv_by_rid.VISCODE.eq(visit1))]
     return exam_entry
 
+def add_image_date(exam_entry, date_column, summ_data):
+    """
+    given an exam entry row, the column that includes the date, and a list,
+    append a value to the list that corresponds to the date of the exam 
+    """
+    
+    # TODO: add date of the more recent of the exams
+    dates_raw = getattr(exam_entry, date_column)
+    dates = validate_dates(dates_raw)
+    date_output = max(dates)
+    exam_
 
 def add_image_bool(exam_entry, done_column, summ_data):
     """
