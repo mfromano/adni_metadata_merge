@@ -6,25 +6,58 @@ Created on Sat Apr 11 15:04:13 2020
 @author: mfromano
 """
 
+
 import os
+os.chdir('/home/mfromano/Research/alzheimers/adni_metadata_merge/code')
 import pandas as pd
 import numpy as np
-os.chdir('/home/mfromano/Research/alzheimers/adni_metadata_merge/code')
+import json
 from metadata_merge_utilities import *
 
 
-def generate_mri_subjects():
+def generate_mri_subjects(ran_ge = None):
+    '''
+    Finds unique subjects from 1 and 3 tesla scans, and generates
+    ParticipantCollections for each of them
+
+    Parameters
+    ----------
+    ran_ge: list
+        list of subject numbers, 0-n, to include
+
+    Returns
+    -------
+    List of ParticipantCollections for each RID.
+
+    '''
     mri_sheet = pd.read_csv(FILE_LIST['mri1']['loc'])
     mri_sheet3 = pd.read_csv(FILE_LIST['mri3']['loc'])
     mri_subjects = np.union1d(pd.unique(mri_sheet.RID), pd.unique(mri_sheet3.RID))
+    if ran_ge is None:
+        ran_ge = range(len(mri_subjects))
     # get info across all 5 documents for all subjects
-    participants_mri = [ParticipantCollection(x) for x in mri_subjects]
+    participants_mri = [ParticipantCollection(x) for x in mri_subjects[ran_ge]]
     print('finished generating participants')
+    return participants_mri
+
+def generate_csv_from_pclist(pclist):
+    '''
+    
+    
+    Parameters
+    ----------
+    pclist : list of ParticipantCollections
+        List of participant collections to concatenate with one another and 
+        write to a spreadsheet
+    Returns
+    -------
+    concatenated pandas DataFrame written to csv file
+    '''
     output_collection = []
-    for x in participants_mri:
-        output_collection.append(merge_data(x))
+    for x in pclist:
+        output_collection.append(generate_summary_data(x))
     output_spreadsheet = pd.concat(output_collection)
-    output_spreadsheet.to_csv('summary_metadata_all_mri.csv')
+    output_spreadsheet.to_csv('summary_metadata_all.csv')
     return output_spreadsheet
 
 
